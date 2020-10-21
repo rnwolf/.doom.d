@@ -240,7 +240,12 @@ Insert a markdown image link"
 ;; Configure search directory
 (setq deft-directory "~/org/roam/")
 
-(setq org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe")
+;;(setq org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe")
+
+(setq org-roam-graph-viewer
+    (lambda (file)
+      (let ((org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe"))
+        (org-roam-graph--open (concat "file:///" file)))))
 
 (use-package! org-roam-server
   :config
@@ -250,8 +255,8 @@ Insert a markdown image link"
         org-roam-server-export-inline-images t
         org-roam-server-serve-files t
         org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
-        org-roam-server-network-poll t
-        org-roam-server-network-arrows nil
+        org-roam-server-network-poll nil
+        org-roam-server-network-arrows 'from
         org-roam-server-network-label-truncate t
         org-roam-server-network-label-truncate-length 60
         org-roam-server-network-label-wrap-length 20))
@@ -311,3 +316,35 @@ Insert a markdown image link"
 ;;        (f-write-text org-roam-directory
 ;;                      'utf-8
 ;;                      (expand-file-name (symbol-name 'org-roam-directory) tmp-dir))))))
+
+
+;; https://awesomeopensource.com/project/nmartin84/.doom.d
+;;
+(setq org-roam-dailies-capture-templates
+   '(("d" "daily" plain (function org-roam-capture--get-point) ""
+      :immediate-finish t
+      :file-name "journal/%<%Y-%m-%d-%a>"
+      :head "#+TITLE: %<%Y-%m-%d %a>\n#+STARTUP: content\n\n")))
+
+(setq org-roam-capture-templates
+        '(("d" "digest" plain (function org-roam-capture--get-point)
+           "%?"
+           :file-name "notes/digest/%<%Y%m%d%H%M>-${slug}"
+           :head "#+title: ${title}\n#+roam_tags: %^{roam_tags}\n\nsource :: [[%^{link}][%^{link_desc}]]\n\n"
+           :unnarrowed t)
+          ("n" "notes" plain (function org-roam-capture--get-point)
+           :file-name "notes/${slug}"
+           :head "#+title: ${title}\n#+roam_tags: %(read-string \"tags: \")\n\n"
+           :unnarrowed t
+           "%?")
+          ("p" "private" plain (function org-roam-capture--get-point)
+           :file-name "notes/private/${slug}"
+           :head "#+title: ${title}\n#+roam_tags: %(read-string \"tags: \")\n\n"
+           :unnarrowed t
+           "%?")
+          ("r" "reveal slide" plain (function org-roam-capture--get-point)
+           :file-name "slides/%<%Y%m%d%H%M>-${slug}"
+           :head "#+title: ${title}\n#+Author: Rudiger Wolf\n#+KEYWORDS: \n#+DESCRIPTION: \n#+OPTIONS: reveal_center:t reveal_progress:t reveal_history:nil reveal_control:t\n#+options: num:nil toc:nil reveal_width:1400 reveal_height:1000\n#+REVEAL_PLUGINS: (highlight notes search zoom)\n#+REVEAL_THEME: %^{theme|white|black|league|beige|sky|night|serif|simple|solarized|blood|moon}\n#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js@4.1.0\n#+REVEAL_OVERVIEW: t\n\n* Headline\n- Some text.\n- More text#+BEGIN_NOTES\nYour note\n#+END_NOTES\n* Next slide\n** Sub-point\n- Bullet1\n#+REVEAL: split\n- Bullet2\n- Bullet3\n"
+           :unnarrow t
+           "%?")))
+

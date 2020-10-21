@@ -57,3 +57,13 @@
 
 ;; Required for org-roam as per https://earvingad.github.io/posts/org_roam_windows/
 (package! emacsql-sqlite3)
+
+(package! org-roam-server)
+
+
+;; https://github.com/tamasgal/rc/blob/master/doom.d
+;; https://oer.gitlab.io/emacs-reveal-howto/howto.html
+(use-package! org-re-reveal
+    :after ox
+    :init
+    (setq org-re-reveal-root "https://revealjs.com"))

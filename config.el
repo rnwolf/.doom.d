@@ -224,3 +224,90 @@ Insert a markdown image link"
   :config
   ;; (setq default-abbrev-mode t)
   (setq save-abbrevs 'silently))
+
+
+;; This plus Roam Chrome Bookmarklet can be used to add webpages.
+(after! org-roam
+      (setq org-roam-capture-ref-templates
+            '(("r" "ref" plain (function org-roam-capture--get-point)
+               "%?"
+               :file-name "websites/${slug}"
+               :head "#+TITLE: ${title}
+    #+ROAM_KEY: ${ref}
+    - source :: ${ref}"
+               :unnarrowed t))))
+
+;; Configure search directory
+(setq deft-directory "~/org/roam/")
+
+(setq org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe")
+
+(use-package! org-roam-server
+  :config
+  (setq org-roam-server-host "127.0.0.1"
+        org-roam-server-port 8080
+        org-roam-server-authenticate nil
+        org-roam-server-export-inline-images t
+        org-roam-server-serve-files t
+        org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
+        org-roam-server-network-poll t
+        org-roam-server-network-arrows nil
+        org-roam-server-network-label-truncate t
+        org-roam-server-network-label-truncate-length 60
+        org-roam-server-network-label-wrap-length 20))
+
+;;;;;;;;;;
+;;;; https://github.com/AloisJanicek/org-roam-server-light
+;;;; move org-roam-server functionality from emacs into external python server process
+;;;; due to subjective poor elisp / emacs performance when computing graph data
+;;;; for larger amount of org-roam files and serving them to web browser.
+;;
+;;(require 'f)
+;;
+;;(defvar org-roam-server-light-dir "~/org-roam-server-light"
+;;  "Directory contenting org-roam-server-light repository.")
+;;
+;;(defun org-roam-server-light-update-last-buffer ()
+;;  "Update `org-roam-server-light-last-roam-buffer'."
+;;  (let ((buf (or (buffer-base-buffer (current-buffer)) (current-buffer))))
+;;    (when (org-roam--org-roam-file-p
+;;           (buffer-file-name buf))
+;;      (setq org-roam-server-light-last-roam-buffer (car (last
+;;                                                            (split-string
+;;                                                             (org-roam--path-to-slug
+;;                                                              (buffer-name buf))
+;;                                                             "/"))))
+;;      (f-write-text org-roam-server-light-last-roam-buffer
+;;                    'utf-8
+;;                    (format "/tmp/org-roam-server-light/%s" (symbol-name 'org-roam-server-light-last-roam-buffer))))))
+;;
+;;(defun org-roam-server-light-find-file-hook-function ()
+;;  "If the current visited file is an `org-roam` file, update the current buffer."
+;;  (when (org-roam--org-roam-file-p)
+;;    (add-hook 'post-command-hook #'org-roam-server-light-update-last-buffer nil t)
+;;    (org-roam-server-light-update-last-buffer)))
+;;
+;;(define-minor-mode org-roam-server-light-mode
+;;  "Start the http server and serve org-roam files."
+;;  :lighter ""
+;;  :global t
+;;  :init-value nil
+;;  (let* ((title "org-roam-server-light")
+;;         (tmp-dir (concat "/tmp/" title)))
+;;    (if (not (ignore-errors org-roam-server-light-mode))
+;;        (progn
+;;          (when (get-process title)
+;;            (delete-process title))
+;;          (remove-hook 'find-file-hook #'org-roam-server-light-find-file-hook-function nil)
+;;          (dolist (buf (org-roam--get-roam-buffers))
+;;            (with-current-buffer buf
+;;              (remove-hook 'post-command-hook #'org-roam-server-light-update-last-buffer t))))
+;;      (progn
+;;        (let ((default-directory org-roam-server-light-dir))
+;;          (start-process-shell-command "org-roam-server-light" "org-roam-server-light-output-buffer" "python main.py"))
+;;        (add-hook 'find-file-hook #'org-roam-server-light-find-file-hook-function nil nil)
+;;        (unless (file-exists-p tmp-dir)
+;;          (make-directory tmp-dir))
+;;        (f-write-text org-roam-directory
+;;                      'utf-8
+;;                      (expand-file-name (symbol-name 'org-roam-directory) tmp-dir))))))

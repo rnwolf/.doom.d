@@ -60,6 +60,19 @@
 
 (package! org-roam-server)
 
+;;(package! pdf-tools)
+;; Org-noter’s purpose is to let you create notes that are kept in sync when you scroll through the document, but that are external to it
+;;(package! org-noter)
+;;(package! org-noter-pdftools)
+
+;; visual-regexp for Emacs is like replace-regexp, but with live visual feedback directly in the buffer.
+(package! visual-regexp)
+
+;; interactively create searches, doing automatic searches based on the editing context, refining and modifying search results and much more.
+(package! rg)
+
+;; see the contents of the subdirectory and the current directory in the same view.
+(package! dired-subtree)
 
 ;; https://github.com/tamasgal/rc/blob/master/doom.d
 ;; https://oer.gitlab.io/emacs-reveal-howto/howto.html

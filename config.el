@@ -245,6 +245,8 @@ Insert a markdown image link"
 
 ;; Configure search directory
 (setq deft-directory "~/org/roam/")
+(setq deft-recursive t)
+
 
 ;;(setq org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe")
 
@@ -287,29 +289,78 @@ Insert a markdown image link"
         '(("d" "digest" plain (function org-roam-capture--get-point)
            "%?"
            :file-name "notes/digest/%<%Y%m%d%H%M>-${slug}"
-           :head "#+title: ${title}\n#+roam_tags: %^{roam_tags}\n\nsource :: [[%^{link}][%^{link_desc}]]\n\n"
+           :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %^{roam_tags}\n\nsource :: [[%^{link}][%^{link_desc}]]\n\n"
            :unnarrowed t)
           ("n" "notes" plain (function org-roam-capture--get-point)
            :file-name "notes/${slug}"
-           :head "#+title: ${title}\n#+roam_tags: %(read-string \"tags: \")\n\n"
+           :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %(read-string \"tags: \")\n\n"
+           :unnarrowed t
+           "%?")
+          ("g" "glossary" plain (function org-roam-capture--get-point)
+           :file-name "glossary/${slug}"
+           :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %(read-string \"tags: \")\n\n"
            :unnarrowed t
            "%?")
           ("p" "private" plain (function org-roam-capture--get-point)
            :file-name "notes/private/${slug}"
-           :head "#+title: ${title}\n#+roam_tags: %(read-string \"tags: \")\n\n"
+           :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %(read-string \"tags: \")\n\n"
            :unnarrowed t
            "%?")
           ("r" "reveal slide" plain (function org-roam-capture--get-point)
            :file-name "slides/%<%Y%m%d%H%M>-${slug}"
-           :head "#+title: ${title}\n#+Author: Rudiger Wolf\n#+KEYWORDS: \n#+DESCRIPTION: \n#+OPTIONS: reveal_center:t reveal_progress:t reveal_history:nil reveal_control:t\n#+options: num:nil toc:nil reveal_width:1400 reveal_height:1000\n#+REVEAL_PLUGINS: (highlight notes search zoom)\n#+REVEAL_THEME: %^{theme|white|black|league|beige|sky|night|serif|simple|solarized|blood|moon}\n#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js@4.1.0\n#+REVEAL_OVERVIEW: t\n\n* Headline\n- Some text.\n- More text#+BEGIN_NOTES\nYour note\n#+END_NOTES\n* Next slide\n** Sub-point\n- Bullet1\n#+REVEAL: split\n- Bullet2\n- Bullet3\n"
+           :head "#+title: ${title}\n#+Author: Rudiger Wolf\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+KEYWORDS: %(read-string \"keywords: \")\n#+DESCRIPTION: \n#+OPTIONS: reveal_center:t reveal_progress:t reveal_history:nil reveal_control:t\n#+options: num:nil toc:nil reveal_width:1400 reveal_height:1000\n#+REVEAL_PLUGINS: (highlight notes search zoom)\n#+REVEAL_THEME: %^{theme|white|black|league|beige|sky|night|serif|simple|solarized|blood|moon}\n#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js@4.1.0\n#+REVEAL_OVERVIEW: t\n\n* Headline\n- Some text.\n- More text#+BEGIN_NOTES\nYour note\n#+END_NOTES\n* Next slide\n** Sub-point\n- Bullet1\n#+REVEAL: split\n- Bullet2\n- Bullet3\n"
            :unnarrow t
            "%?")))
 
-
-;;(use-package org-pdftools
-;;  :hook (org-mode . org-pdftools-setup-link))
+;; https://org-roam.discourse.group/t/update-a-field-last-modified-at-save/321/8
 ;;
-;;(use-package org-noter-pdftools
-;;  :after org-noter
-;;  :config
-;;        (with-eval-after-load 'pdf-annot (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
+(add-hook 'before-save-hook #'zp/org-set-last-modified)
+
+(defun zp/org-find-time-file-property (property &optional anywhere)
+    "Return the position of the time file PROPERTY if it exists.
+When ANYWHERE is non-nil, search beyond the preamble."
+    (save-excursion
+      (goto-char (point-min))
+      (let ((first-heading
+             (save-excursion
+               (re-search-forward org-outline-regexp-bol nil t))))
+        (when (re-search-forward (format "^#\\+%s:" property)
+                                 (if anywhere nil first-heading)
+                                 t)
+          (point)))))
+
+
+
+(defun zp/org-has-time-file-property-p (property &optional anywhere)
+    "Return the position of time file PROPERTY if it is defined.
+As a special case, return -1 if the time file PROPERTY exists but
+is not defined."
+    (when-let ((pos (zp/org-find-time-file-property property anywhere)))
+      (save-excursion
+        (goto-char pos)
+        (if (and (looking-at-p " ")
+                 (progn (forward-char)
+                        (org-at-timestamp-p 'lax)))
+            pos
+          -1))))
+
+(defun zp/org-set-time-file-property (property &optional anywhere pos)
+    "Set the time file PROPERTY in the preamble.
+When ANYWHERE is non-nil, search beyond the preamble.
+If the position of the file PROPERTY has already been computed,
+it can be passed in POS."
+    (when-let ((pos (or pos
+                        (zp/org-find-time-file-property property))))
+      (save-excursion
+        (goto-char pos)
+        (if (looking-at-p " ")
+            (forward-char)
+          (insert " "))
+        (delete-region (point) (line-end-position))
+        (let* ((now (format-time-string "[%Y-%m-%d %a %H:%M]")))
+          (insert now)))))
+
+(defun zp/org-set-last-modified ()
+    "Update the LAST_MODIFIED file property in the preamble."
+    (when (derived-mode-p 'org-mode)
+      (zp/org-set-time-file-property "LAST_MODIFIED")))

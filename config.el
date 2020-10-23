@@ -42,6 +42,8 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
+(setq org-roam-directory (file-truename "~/org/roam/"))
+
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type 'relative)
@@ -283,7 +285,8 @@ Insert a markdown image link"
    '(("d" "daily" plain (function org-roam-capture--get-point) ""
       :immediate-finish t
       :file-name "journal/%<%Y-%m-%d-%a>"
-      :head "#+TITLE: %<%Y-%m-%d %a>\n#+STARTUP: content\n\n")))
+      :head "#+TITLE: %<%Y-%m-%d %a>\n#+STARTUP: content\n\n* Tasks\n\n* New\n\n* Next\n\n* Notes\n\n* Time Spent\n\n* Insights\n\n
+")))
 
 (setq org-roam-capture-templates
         '(("d" "digest" plain (function org-roam-capture--get-point)
@@ -301,8 +304,8 @@ Insert a markdown image link"
            :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %(read-string \"tags: \")\n\n"
            :unnarrowed t
            "%?")
-          ("p" "private" plain (function org-roam-capture--get-point)
-           :file-name "notes/private/${slug}"
+          ("p" "people" plain (function org-roam-capture--get-point)
+           :file-name "notes/people/${slug}"
            :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %(read-string \"tags: \")\n\n"
            :unnarrowed t
            "%?")

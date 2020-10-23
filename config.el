@@ -71,7 +71,32 @@
 ;; ‘*bold*’, ‘/italic/’, ‘_underlined_’, ‘=verbatim=’ and ‘~code~’ and ‘+strike-through+’.
 (setq org-hide-emphasis-markers t)
 
-(setq deft-directory org-directory )
+;; Configure search directory
+;;(setq deft-directory org-directory )
+(setq deft-directory "~/org/roam/")
+(setq deft-recursive t)
+(setq deft-default-extension "org")
+
+;; Setup my list of deft directories
+;; https://www.reddit.com/r/emacs/comments/h0h4ix/how_to_configure_multile_directories_with_deft/
+(defvar my/deft-dir-list '()
+  "A list of deft directories to pick")
+
+(setq my/deft-dir-list '("~/org/"
+                         "~/org/gtd/"
+                         "~/org/roam/"
+                         "~/org/archive/"
+                         "~/org/roam/journal/"
+                         "~/org/roam/people/"
+                         "~/org/roam/notes/"
+                         ))
+
+(defun my/pick-deft-dir ()
+  "Select directories from a list"
+  (interactive)
+  (setq deft-directory
+        (ido-completing-read "Select directory: " my/deft-dir-list))
+  (deft-refresh))
 
 ;; Specify the Projectile root directories
 (setq projectile-project-search-path '("~/workspace"))
@@ -245,9 +270,6 @@ Insert a markdown image link"
     - source :: ${ref}"
                :unnarrowed t))))
 
-;; Configure search directory
-(setq deft-directory "~/org/roam/")
-(setq deft-recursive t)
 
 
 ;;(setq org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe")

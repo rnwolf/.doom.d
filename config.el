@@ -40,7 +40,7 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org/")
+(setq org-directory "~/org")
 
 (setq org-roam-directory (file-truename "~/org/roam/"))
 
@@ -73,7 +73,7 @@
 
 ;; Configure search directory
 ;;(setq deft-directory org-directory )
-(setq deft-directory "~/org/roam/")
+(setq deft-directory "~/org/roam/")  ;; Default, see below to pick.
 (setq deft-recursive t)
 (setq deft-default-extension "org")
 
@@ -83,12 +83,13 @@
   "A list of deft directories to pick")
 
 (setq my/deft-dir-list '("~/org/"
-                         "~/org/gtd/"
                          "~/org/roam/"
                          "~/org/archive/"
+                         "~/org/roam/glossary/"
                          "~/org/roam/journal/"
                          "~/org/roam/people/"
                          "~/org/roam/notes/"
+                         "~/org/roam/slides/"
                          ))
 
 (defun my/pick-deft-dir ()
@@ -299,6 +300,70 @@ Insert a markdown image link"
 ;;;; due to subjective poor elisp / emacs performance when computing graph data
 ;;;; for larger amount of org-roam files and serving them to web browser.
 ;;
+(require 'f)
+
+(defvar org-roam-server-light-dir "~/org-roam-server-light"
+  "Directory contenting org-roam-server-light repository.")
+
+(defvar org-roam-server-light-tmp-dir
+  (let ((dir-name "org-roam-server-light/"))
+    (if (or IS-WINDOWS IS-MAC)
+        (concat (replace-regexp-in-string "\\\\" "/"
+                                          (or (getenv "TMPDIR")
+                                              (getenv "TMP")))
+                "/" dir-name)
+      (concat "/tmp/" dir-name)))
+  "Directory contenting org-roam-server-light repository.")
+
+(defvar org-roam-server-light-last-roam-buffer nil
+  "Variable storing name of the last org-roam buffer")
+
+;;;###autoload
+(defun org-roam-server-light-update-last-buffer ()
+  "Update `org-roam-server-light-last-roam-buffer'."
+  (let ((buf (or (buffer-base-buffer (current-buffer)) (current-buffer))))
+    (when (org-roam--org-roam-file-p
+           (buffer-file-name buf))
+      (setq org-roam-server-light-last-roam-buffer
+            (car (last (split-string (org-roam--path-to-slug (buffer-name buf)) "/"))))
+      (f-write-text
+       org-roam-server-light-last-roam-buffer
+       'utf-8
+       (format (concat org-roam-server-light-tmp-dir "org-roam-server-light-last-roam-buffer"))))))
+
+;;;###autoload
+(defun org-roam-server-light-find-file-hook-function ()
+  "If the current visited file is an `org-roam` file, update the current buffer."
+  (when (org-roam--org-roam-file-p)
+    (add-hook 'post-command-hook #'org-roam-server-light-update-last-buffer nil t)
+    (org-roam-server-light-update-last-buffer)))
+
+(define-minor-mode org-roam-server-light-mode
+  "Start the http server and serve org-roam files."
+  :lighter ""
+  :global t
+  :init-value nil
+  (let* ((title "org-roam-server-light"))
+    (if (not (ignore-errors org-roam-server-light-mode))
+        (progn
+          (when (get-process title)
+            (delete-process title))
+          (remove-hook 'find-file-hook #'org-roam-server-light-find-file-hook-function nil)
+          (dolist (buf (org-roam--get-roam-buffers))
+            (with-current-buffer buf
+              (remove-hook 'post-command-hook #'org-roam-server-light-update-last-buffer t))))
+      (progn
+        (let ((default-directory org-roam-server-light-dir))
+          (start-process-shell-command "org-roam-server-light" "org-roam-server-light-output-buffer" "py -3.8 main.py"))
+        (add-hook 'find-file-hook #'org-roam-server-light-find-file-hook-function nil nil)
+        (unless (file-exists-p org-roam-server-light-tmp-dir)
+          (make-directory org-roam-server-light-tmp-dir))
+        (f-write-text org-roam-db-location
+                      'utf-8
+                      (expand-file-name "org-roam-db-location" org-roam-server-light-tmp-dir))
+        (f-write-text org-roam-directory
+                      'utf-8
+                      (expand-file-name "org-roam-directory" org-roam-server-light-tmp-dir))))))
 
 
 ;; https://awesomeopensource.com/project/nmartin84/.doom.d

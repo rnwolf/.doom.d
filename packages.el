@@ -58,8 +58,6 @@
 ;; Required for org-roam as per https://earvingad.github.io/posts/org_roam_windows/
 (package! emacsql-sqlite3)
 
-(package! org-roam-server)
-
 ;;(package! pdf-tools)
 ;; Org-noter’s purpose is to let you create notes that are kept in sync when you scroll through the document, but that are external to it
 ;;(package! org-noter)
@@ -80,3 +78,10 @@
     :after ox
     :init
     (setq org-re-reveal-root "https://revealjs.com"))
+
+;;  Install the latest code direct from the code repo.
+
+;;  (package! org-roam
+;;    :recipe (:host github :repo "org-roam/org-roam")
+;;    :pin "0d235686f4b2cef9b6cded861edabf747e1d64e2")
+(unpin! org-roam)

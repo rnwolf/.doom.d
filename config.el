@@ -40,9 +40,14 @@
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org")
+(setq org-directory "~/OneDrive/Documents/org")
 
-(setq org-roam-directory (file-truename "~/org/roam/"))
+(setq org-roam-directory (file-truename "~/OneDrive/Documents/roam/"))
+
+;; https://www.orgroam.com/manual/Tags.html
+;; 'prop: This extracts tags from the #+roam_tags property. Tags are space delimited, and can be multi-word using double quotes.
+;; 'last-directory: if a file is located at relative path foo/bar/file.org, the file will have tag bar
+(setq org-roam-tag-sources '(prop last-directory))
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -73,7 +78,7 @@
 
 ;; Configure search directory
 ;;(setq deft-directory org-directory )
-(setq deft-directory "~/org/roam/")  ;; Default, see below to pick.
+(setq deft-directory "~/OneDrive/Documents/roam/")  ;; Default, see below to pick.
 (setq deft-recursive t)
 (setq deft-default-extension "org")
 
@@ -82,14 +87,14 @@
 (defvar my/deft-dir-list '()
   "A list of deft directories to pick")
 
-(setq my/deft-dir-list '("~/org/"
-                         "~/org/roam/"
-                         "~/org/archive/"
-                         "~/org/roam/glossary/"
-                         "~/org/roam/journal/"
-                         "~/org/roam/people/"
-                         "~/org/roam/notes/"
-                         "~/org/roam/slides/"
+(setq my/deft-dir-list '("~/OneDrive/Documents/org/"
+                         "~/OneDrive/Documents/roam/"
+                         "~/OneDrive/Documents/org/archive/"
+                         "~/OneDrive/Documents/roam/glossary/"
+                         "~/OneDrive/Documents/roam/journal/"
+                         "~/OneDrive/Documents/roam/people/"
+                         "~/OneDrive/Documents/roam/notes/"
+                         "~/OneDrive/Documents/roam/slides/"
                          ))
 
 (defun my/pick-deft-dir ()
@@ -101,6 +106,21 @@
 
 ;; Specify the Projectile root directories
 (setq projectile-project-search-path '("~/workspace"))
+(setq projectile-ignored-projects '("~/" "~/tmp" "~/.emacs.d/.local/straight/repos/"))
+
+;; Window title
+;; I’d like to have just the buffer name, then if applicable the project folder
+(setq frame-title-format
+      '(""
+        (:eval
+         (if (s-contains-p org-roam-directory (or buffer-file-name ""))
+             (replace-regexp-in-string ".*/[0-9]*-?" "🢔 " buffer-file-name)
+           "%b"))
+        (:eval
+         (let ((project-name (projectile-project-name)))
+           (unless (string= "-" project-name)
+             (format (if (buffer-modified-p)  " ◉ %s" "  ●  %s") project-name))))))
+;; End of modifying windows titles.
 
 
 (setq display-time-day-and-date t)
@@ -273,28 +293,13 @@ Insert a markdown image link"
 
 
 
-;;(setq org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe")
-
 (setq org-roam-graph-viewer
     (lambda (file)
       (let ((org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe"))
         (org-roam-graph--open (concat "file:///" file)))))
 
-(use-package! org-roam-server
-  :config
-  (setq org-roam-server-host "127.0.0.1"
-        org-roam-server-port 8080
-        org-roam-server-authenticate nil
-        org-roam-server-export-inline-images t
-        org-roam-server-serve-files t
-        org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
-        org-roam-server-network-poll nil
-        org-roam-server-network-arrows 'from
-        org-roam-server-network-label-truncate t
-        org-roam-server-network-label-truncate-length 60
-        org-roam-server-network-label-wrap-length 20))
 
-;;;;;;;;;;
+;;;; org-roam-server-light ;;
 ;;;; https://github.com/AloisJanicek/org-roam-server-light
 ;;;; move org-roam-server functionality from emacs into external python server process
 ;;;; due to subjective poor elisp / emacs performance when computing graph data
@@ -304,6 +309,17 @@ Insert a markdown image link"
 
 (defvar org-roam-server-light-dir "~/org-roam-server-light"
   "Directory contenting org-roam-server-light repository.")
+
+(defvar org-roam-server-light-network-vis-options nil
+  "Options to be passed directly to vis.Network, in JSON format.
+e.g. (json-encode (list (cons 'physics (list (cons 'enabled json-false)))))
+or { \"physics\": { \"enabled\": false } }"
+  )
+
+;; Example of enabling 'to' arrows ->, for more see visjs.github.io/vis-network/docs/network
+(setq org-roam-server-light-network-vis-options
+      "{ \"edges\": { \"arrows\": { \"to\": { \"enabled\": true,\"scaleFactor\": 1.5 } } } }"
+      )
 
 (defvar org-roam-server-light-tmp-dir
   (let ((dir-name "org-roam-server-light/"))
@@ -329,7 +345,7 @@ Insert a markdown image link"
       (f-write-text
        org-roam-server-light-last-roam-buffer
        'utf-8
-       (format (concat org-roam-server-light-tmp-dir "org-roam-server-light-last-roam-buffer"))))))
+       (concat org-roam-server-light-tmp-dir "org-roam-server-light-last-roam-buffer")))))
 
 ;;;###autoload
 (defun org-roam-server-light-find-file-hook-function ()
@@ -353,18 +369,22 @@ Insert a markdown image link"
             (with-current-buffer buf
               (remove-hook 'post-command-hook #'org-roam-server-light-update-last-buffer t))))
       (progn
-        (let ((default-directory org-roam-server-light-dir))
-          (start-process-shell-command "org-roam-server-light" "org-roam-server-light-output-buffer" "py -3.8 main.py"))
         (add-hook 'find-file-hook #'org-roam-server-light-find-file-hook-function nil nil)
         (unless (file-exists-p org-roam-server-light-tmp-dir)
           (make-directory org-roam-server-light-tmp-dir))
+        (f-write-text org-roam-server-light-network-vis-options
+                      'utf-8
+                      (expand-file-name "org-roam-server-light-network-vis-options" org-roam-server-light-tmp-dir))
         (f-write-text org-roam-db-location
                       'utf-8
                       (expand-file-name "org-roam-db-location" org-roam-server-light-tmp-dir))
         (f-write-text org-roam-directory
                       'utf-8
-                      (expand-file-name "org-roam-directory" org-roam-server-light-tmp-dir))))))
-
+                      (expand-file-name "org-roam-directory" org-roam-server-light-tmp-dir))
+        (let ((default-directory org-roam-server-light-dir))
+          (start-process-shell-command "org-roam-server-light" "org-roam-server-light-output-buffer" "py -3.8 main.py")))
+      )))
+;;;; end org-roam-server-light ;;;;
 
 ;; https://awesomeopensource.com/project/nmartin84/.doom.d
 ;;
@@ -403,7 +423,7 @@ Insert a markdown image link"
            "%?")))
 
 ;; https://org-roam.discourse.group/t/update-a-field-last-modified-at-save/321/8
-;;
+;; Start - LAST_MODIFIED update on save if exists
 (add-hook 'before-save-hook #'zp/org-set-last-modified)
 
 (defun zp/org-find-time-file-property (property &optional anywhere)
@@ -454,3 +474,10 @@ it can be passed in POS."
     "Update the LAST_MODIFIED file property in the preamble."
     (when (derived-mode-p 'org-mode)
       (zp/org-set-time-file-property "LAST_MODIFIED")))
+;; End - LAST_MODIFIED update on save if exists
+
+;; Org Journal Settings
+(setq org-journal-date-prefix "#+TITLE: "
+      org-journal-time-prefix "* "
+      org-journal-date-format "%Y-%m-%d, %a"
+      org-journal-file-format "%Y-%m-%d.org")

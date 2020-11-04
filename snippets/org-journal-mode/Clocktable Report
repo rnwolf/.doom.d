@@ -1,0 +1,5 @@
+# key: clocktable
+# name: Clocktable Report
+# --
+#+BEGIN: clocktable :scope file :maxlevel 4 compact: nil :emphasize t
+#+END

@@ -30,7 +30,8 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'doom-vibrant) ;; doom-one
+;;(setq doom-theme 'doom-vibrant) ;; doom-one based theme
+(setq doom-theme 'doom-one-light) ;; doom-one based
 
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
@@ -43,6 +44,9 @@
 (setq org-directory "~/OneDrive/Documents/org")
 
 (setq org-roam-directory (file-truename "~/OneDrive/Documents/roam/"))
+
+
+(setq org-agenda-files "~/OneDrive/Documents/org/journal") ;; Add additional directories here.
 
 ;; https://www.orgroam.com/manual/Tags.html
 ;; 'prop: This extracts tags from the #+roam_tags property. Tags are space delimited, and can be multi-word using double quotes.
@@ -87,7 +91,9 @@
 (defvar my/deft-dir-list '()
   "A list of deft directories to pick")
 
-(setq my/deft-dir-list '("~/OneDrive/Documents/org/"
+(setq my/deft-dir-list '(
+                         "~/OneDrive/Documents/2020/"
+                         "~/OneDrive/Documents/org/"
                          "~/OneDrive/Documents/roam/"
                          "~/OneDrive/Documents/org/archive/"
                          "~/OneDrive/Documents/roam/glossary/"
@@ -396,7 +402,12 @@ or { \"physics\": { \"enabled\": false } }"
 ")))
 
 (setq org-roam-capture-templates
-        '(("d" "digest" plain (function org-roam-capture--get-point)
+        '(("a" "app" plain (function org-roam-capture--get-point)
+           "%?"
+           :file-name "notes/app/%<%Y%m%d%H%M>-${slug}"
+           :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %^{roam_tags}\n\nsource :: [[%^{link}][%^{link_desc}]]\n\n"
+           :unnarrowed t)
+          ("d" "digest" plain (function org-roam-capture--get-point)
            "%?"
            :file-name "notes/digest/%<%Y%m%d%H%M>-${slug}"
            :head "#+title: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n#+roam_tags: %^{roam_tags}\n\nsource :: [[%^{link}][%^{link_desc}]]\n\n"
@@ -480,4 +491,6 @@ it can be passed in POS."
 (setq org-journal-date-prefix "#+TITLE: "
       org-journal-time-prefix "* "
       org-journal-date-format "%Y-%m-%d, %a"
-      org-journal-file-format "%Y-%m-%d.org")
+      org-journal-file-format "%Y-%m-%d.org"
+      org-journal-skip-carryover-drawers (list "LOGBOOK")) ;;skip carry over of previous days clocked entries when it is under the drawer LOGBOOK
+

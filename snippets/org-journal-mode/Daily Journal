@@ -1,0 +1,29 @@
+# key: dailyjournal
+# name: Daily Journal
+# --
+
+Schedule time for tasks with
+
+SPC m t  /  SHIFT+left/right arrows : To change task status
+SHIFT + up/down arrows : Priority for tasks for sorted tasks in Agenda view
+SPC m q : Assign Tag to task
+SPC o a m : Open Agenda view and Match for tag
+C-c C-s : Schedule task date & time
+
+* Daily Tasks
+** TODO Review Emails Morning and Afternoon
+** TODO Process Inbox
+** TODO Review plans for the day
+** TODO Capture Expenses
+** TODO Anki Review
+** TODO Record clock table
+** TODO Daily retrospective
+** TODO Update plans
+
+* Wellbeing
+** TODO Exercise
+** TODO RSI Exercises
+
+* Unplanned
+
+* Project Tasks

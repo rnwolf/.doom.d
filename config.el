@@ -42,11 +42,10 @@
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/OneDrive/Documents/org")
+(setq org-log-done 'time) ;; Log the date and time that tasks are done.
+(setq org-agenda-files (directory-files-recursively "~/OneDrive/Documents/org/" "\\.org$"))
 
 (setq org-roam-directory (file-truename "~/OneDrive/Documents/roam/"))
-
-
-(setq org-agenda-files "~/OneDrive/Documents/org/journal") ;; Add additional directories here.
 
 ;; https://www.orgroam.com/manual/Tags.html
 ;; 'prop: This extracts tags from the #+roam_tags property. Tags are space delimited, and can be multi-word using double quotes.
@@ -145,9 +144,9 @@
                                   (:name "Important"
                                    :priority "A")
                                   (:name "Overdue"
-                                   :dealine past)
+                                   :deadline past)
                                   (:name "Due soon"
-                                   :dealine future)))
+                                   :deadline future)))
   :config
   (org-super-agenda-mode))
 
@@ -193,6 +192,30 @@ Insert a markdown image link"
   (my/take-screenshot)
   (insert (concat "![]("filename")")))
 ;; End of screenshot functions.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Move and Insert link to the most recent screenshot image
+;; https://www.reddit.com/r/emacs/comments/52q70g/paste_an_image_on_clipboard_to_emacs_org_mode/
+(setq andre--screenshot-folder "~/OneDrive/Inbox")
+
+(defun get-newest-file-from-dir  (path)
+      "Get latest file (including directory) in PATH."
+      (car (directory-files path 'full nil #'file-newer-than-file-p)))
+
+    (defun my/org-move-insert-screenshot ()
+      "Moves latest(sorted by name) image from Pictures folder to ./media, inserting org-mode link"
+      (interactive)
+      (let* ((indir (expand-file-name andre--screenshot-folder))
+             (infile (get-newest-file-from-dir indir))
+             (outdir (concat (file-name-directory (buffer-file-name)) "/media"))
+             (outfile (expand-file-name (file-name-nondirectory infile) outdir)))
+        (unless (file-directory-p outdir)
+          (make-directory outdir t))
+        (rename-file infile outfile)
+        (insert (concat (concat "#+ATTR_HTML: :width 300\n#+ATTR_ORG: :width 300\n[[./media/" (file-name-nondirectory outfile)) "]]")))
+      (newline)
+      (newline))
 
 ;; Spelling functions.
 ;; Use Choco to install hunspell
@@ -304,6 +327,8 @@ Insert a markdown image link"
       (let ((org-roam-graph-viewer "c:\\Program Files\\Mozilla Firefox\\firefox.exe"))
         (org-roam-graph--open (concat "file:///" file)))))
 
+;; Make it quick to get org-roam menu up.
+(map! :leader :desc "Org roam" "r" (general-simulate-key "SPC n r"))
 
 ;;;; org-roam-server-light ;;
 ;;;; https://github.com/AloisJanicek/org-roam-server-light
@@ -493,4 +518,133 @@ it can be passed in POS."
       org-journal-date-format "%Y-%m-%d, %a"
       org-journal-file-format "%Y-%m-%d.org"
       org-journal-skip-carryover-drawers (list "LOGBOOK")) ;;skip carry over of previous days clocked entries when it is under the drawer LOGBOOK
+
+(use-package! org-gtd
+  :after org
+  :config
+  ;; where org-gtd will put its files. This value is also the default one.
+  (setq org-gtd-directory "~/OneDrive/Documents/org")
+  ;; package: https://github.com/Malabarba/org-agenda-property
+  ;; this is so you can see who an item was delegated to in the agenda
+  (setq org-agenda-property-list '("DELEGATED_TO"))
+  ;; I think this makes the agenda easier to read
+  (setq org-agenda-property-position 'next-line)
+  ;; package: https://www.nongnu.org/org-edna-el/
+  ;; org-edna is used to make sure that when a project task gets DONE,
+  ;; the next TODO is automatically changed to NEXT.
+  (setq org-edna-use-inheritance t)
+  (org-edna-load)
+  :bind
+  (("C-c g c" . org-gtd-capture) ;; add item to inbox
+   ("C-c g a" . org-agenda-list) ;; see what's on your plate today
+   ("C-c g p" . org-gtd-process-inbox) ;; process entire inbox
+   ("C-c g n" . org-gtd-show-all-next) ;; see all NEXT items
+   ("C-c g s" . org-gtd-show-stuck-projects) ;; see projects that don't have a NEXT item
+   ("C-c g f" . org-gtd-clarify-finalize)) ;; the keybinding to hit when you're done editing an item in the processing phase
+)
+
+(after! (org-gtd org-capture)
+  (add-to-list 'org-capture-templates
+               '("i" "GTD item"
+                 entry (file (lambda () (org-gtd--path org-gtd-inbox-file-basename)))
+                 "* %?\n%U\n\n  %i"
+                 :kill-buffer t))
+  (add-to-list 'org-capture-templates
+               '("l" "GTD item with link to where you are in emacs now"
+                 entry (file (lambda () (org-gtd--path org-gtd-inbox-file-basename)))
+                 "* %?\n%U\n\n  %i\n  %a"
+                 :kill-buffer t)))
+
+(defadvice! +zz/load-org-gtd-before-capture (&optional goto keys)
+    :before #'org-capture
+    (require 'org-capture)
+    (require 'org-gtd))
+
+;; Integrate org-journal with org-capture
+;; https://github.com/bastibe/org-journal
+
+(defun org-journal-find-location ()
+  ;; Open today's journal, but specify a non-nil prefix argument in order to
+  ;; inhibit inserting the heading; org-capture will insert the heading.
+  (org-journal-new-entry t)
+  (unless (eq org-journal-file-type 'daily)
+    (org-narrow-to-subtree))
+  (goto-char (point-max)))
+
+(after! (org-gtd org-capture)
+  (add-to-list 'org-capture-templates
+               '("o" "org-Journal entry for today"
+                 plain (function org-journal-find-location)
+                 "** %(format-time-string org-journal-time-format)%^{Title}\nCREATED: %u\n%i%?"
+                 :jump-to-captured t :immediate-finish t)))
+
+(defvar org-journal--date-location-scheduled-time nil)
+
+(defun org-journal-date-location (&optional scheduled-time)
+  (let ((scheduled-time (or scheduled-time (org-read-date nil nil nil "Date:"))))
+    (setq org-journal--date-location-scheduled-time scheduled-time)
+    (org-journal-new-entry t (org-time-string-to-time scheduled-time))
+    (unless (eq org-journal-file-type 'daily)
+      (org-narrow-to-subtree))
+    (goto-char (point-max))))
+
+(after! (org-gtd org-capture)
+  (add-to-list 'org-capture-templates
+               '("f" "future org-Journal entry"
+                 plain (function org-journal-date-location)
+                 "** TODO %?^{Title}\nCREATED: %u\n%i\n <%(princ org-journal--date-location-scheduled-time)>\n"
+                 :jump-to-captured t)))
+
+;; What do we log for tasks?
+;; https://awesomeopensource.com/project/nmartin84/.doom.d
+(after! org (setq org-log-into-drawer t
+                  org-log-done 'time
+                  org-log-repeat 'time
+                  org-log-redeadline 'note
+                  org-log-reschedule 'note))
+
+;; keybind to disable search highlighting (like :set noh)
+(map! :leader
+      :desc "Clear search highlight"
+      "s c"
+      #'evil-ex-nohighlight)
+
+;; erc-burnt-toast.el --- erc-match support for w32 notification center
+;; https://github.com/mplscorwin/erc-burnt-toast/blob/master/erc-burnt-toast.el
+;;(add-load-path "lisp")
+
+(let ((default-directory (expand-file-name "packages" doom-private-dir)))
+  (normal-top-level-add-subdirs-to-load-path))
+
+;; Basic setup:
+   (eval-after-load 'erc-match
+     (progn (require 'erc-burnt-toast)
+            (erc-burnt-toast-mode 1)))
+
+;; Configure org-pomodoro alerts so that they work on MS-Windows
+;; +pomodoro to org section in the init.el
+;; ref https://www.gitmemory.com/issue/marcinkoziej/org-pomodoro/75/517809613
+
+(defun org-pomodoro-notify (title message)
+  "Temporary replacement for function of the same name which uses
+the buggy alert.el package.  TITLE is the title of the MESSAGE."
+  (let*
+      ((toast "toast")
+       (t-title (concat " -t \"" title))
+       (t-message (concat "\" -m \"" message "\""))
+       ;;(t-image (concat " -p \"C:\\Program Files\\emacs\\share\\icons\\hicolor\\128x128\\apps\\emacs.png\""))
+       (my-command (concat erc-burnt-toast-command "person@is.an.email.address" t-title t-message )))
+    (call-process-shell-command my-command)))
+
+(setq org-pomodoro-length 3)  ;; test duration of pomodoro
+
+(defun +org-pomodoro/notification(title message)
+  "Send a notification"
+  (when IS-MAC
+    (do-applescript
+     (format "display notification \"%s\" with title \"%s\" sound name \"Ping\"" message title)))
+  (if (eq system-type 'windows-nt)
+      (org-pomodoro-notify (title message)))
+  )
+
 

@@ -5,25 +5,75 @@
 Schedule time for tasks with
 
 SPC m t  /  SHIFT+left/right arrows : To change task status
-SHIFT + up/down arrows : Priority for tasks for sorted tasks in Agenda view
+SHIFT + up/down arrows : Set priority. To sort tasks in agenda.
 SPC m q : Assign Tag to task
 SPC o a m : Open Agenda view and Match for tag
-C-c C-s : Schedule task date & time
+C-c > : Schedule task time  hjkl & SHIFT <> to navigate
+C-c . : Set active date & time stamp
 
-* Daily Tasks
-** TODO Review Emails Morning and Afternoon
-** TODO Process Inbox
-** TODO Review plans for the day
-** TODO Capture Expenses
-** TODO Anki Review
-** TODO Record clock table
-** TODO Daily retrospective
-** TODO Update plans
+C-c g c : org-gtd-capture add item to inbox
 
 * Wellbeing
 ** TODO Exercise
+<`(format-time-string "%Y-%m-%d")`$0 11:00-12:00>
 ** TODO RSI Exercises
+<`(format-time-string "%Y-%m-%d")`$0 08:15-08:35>
+Little and often execrcises.
+** Chair exercises Every few hours
+  - Backward shoulder shrugs
+  - Twist in chair
+  - Head bend to the left (Streach right shoulder)
 
-* Unplanned
+** Main exercises x 5 per day
+ - Lift arms in front, pull sore arm with other
+ - Walking fingers up/down the walls
+ - Hold umbrella and swing out to the sides
+ - Dry back with towel and pull lower arm up and down gently
+
+* Daily Tasks
+C-c g a ;; see what's on your plate today
+
+** TODO Review Emails Morning and Afternoon
+
+https://gmail.google.com
+Keyboard:
+- p previous message
+- n next message
+- ! Spam
+- # Delete
+- r reply
+
+https://fastmail.com
+Keyboard:
+- d/# delete
+- j next
+- k previous
+- u up-to main list
+- x toggle mark
+
+https://www.linkedin.com/messaging/
+
+** TODO Process GTD Inbox
+C-c g p : org-gtd-process-inbox) ;; process entire inbox
+C-c g f : org-gtd-clarify-finalize)) ;; the keybinding to hit when you're done editing an item in the processing phase
+
+** TODO Review plans for the day
+** TODO Capture Expenses
+C-c C-l pdf + pattern to insert Link.
+
+** TODO Anki Review
+** TODO Record clock table
+<`(format-time-string "%Y-%m-%d")`$0 20:00-20:05>
+
+** TODO Daily retrospective
+<`(format-time-string "%Y-%m-%d")`$0 20:05-20:15>
+
+** TODO Update plans
+<`(format-time-string "%Y-%m-%d")`$0 20:15-20:30>
+
+C-c g n ;; see all NEXT items
+C-c g s ;; see projects that don't have a NEXT item
+
+* Unplanned Tasks
 
 * Project Tasks

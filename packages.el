@@ -86,4 +86,8 @@
 ;;    :pin "0d235686f4b2cef9b6cded861edabf747e1d64e2")
 (unpin! org-roam)
 
+(package! org-gtd)
 
+;; These packages make it possible for org-pomodoro to play sound wav file for clicking clock.
+(package! sound-wav)
+(package! powershell)

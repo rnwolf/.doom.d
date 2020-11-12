@@ -149,6 +149,7 @@
        ;;ocaml             ; an objective camel
        (org                ; organize your plain life in plain text
         +roam
+        +pomodoro
         +journal
         +pandoc            ; Export with pandoc support
         +present)          ; Using org-mode for presentations

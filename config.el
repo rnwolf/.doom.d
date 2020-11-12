@@ -573,7 +573,7 @@ it can be passed in POS."
 
 (after! (org-gtd org-capture)
   (add-to-list 'org-capture-templates
-               '("o" "org-Journal entry for today"
+               '("e" "org-Journal Entry for today"
                  plain (function org-journal-find-location)
                  "** %(format-time-string org-journal-time-format)%^{Title}\nCREATED: %u\n%i%?"
                  :jump-to-captured t :immediate-finish t)))
@@ -592,7 +592,7 @@ it can be passed in POS."
   (add-to-list 'org-capture-templates
                '("f" "future org-Journal entry"
                  plain (function org-journal-date-location)
-                 "** TODO %?^{Title}\nCREATED: %u\n%i\n <%(princ org-journal--date-location-scheduled-time)>\n"
+                 "** TODO %?\nCREATED: %u\n%i\n <%(princ org-journal--date-location-scheduled-time)>\n"
                  :jump-to-captured t)))
 
 ;; What do we log for tasks?
@@ -617,34 +617,40 @@ it can be passed in POS."
   (normal-top-level-add-subdirs-to-load-path))
 
 ;; Basic setup:
-   (eval-after-load 'erc-match
-     (progn (require 'erc-burnt-toast)
-            (erc-burnt-toast-mode 1)))
+;;   (eval-after-load 'erc-match
+;;     (progn (require 'erc-burnt-toast)
+;;            (erc-burnt-toast-mode 1)))
 
 ;; Configure org-pomodoro alerts so that they work on MS-Windows
 ;; +pomodoro to org section in the init.el
 ;; ref https://www.gitmemory.com/issue/marcinkoziej/org-pomodoro/75/517809613
 
+;; Org-pomodoro
+(setq org-pomodoro-length 1) ;; 25
+(setq org-pomodoro-short-break-length 1) ;; 5
+(setq org-pomodoro-long-break-length 15)
+(setq org-pomodoro-play-sounds 1)
+
+;;
+;; Can't get popup notofications working under windows. But audio will be good enough.
+;; Will need to get them working for org-agenda notifications.
+;;
+
+;;(defun org-pomodoro-notify (title message)
+;;  "Temporary replacement for function of the same name which uses
+;;the buggy alert.el package.  TITLE is the title of the MESSAGE."
+;;  (let*
+;;      ((toast "toast64")
+;;       (t-title (concat " --title \"" title))
+;;       (t-message (concat "\" --message \"" message "\""))
+;;       (t-image (concat " --icon \"C:\\Program Files\\Emacs\\x86_64\\share\\emacs\\27.1\\etc\\images\\icons\\hicolor\\128x128\\apps\\emacs.png\""))
+;;       (my-command (concat toast t-title t-message t-image)))
+;;    (call-process-shell-command my-command)))
+
 (defun org-pomodoro-notify (title message)
   "Temporary replacement for function of the same name which uses
 the buggy alert.el package.  TITLE is the title of the MESSAGE."
-  (let*
-      ((toast "toast")
-       (t-title (concat " -t \"" title))
-       (t-message (concat "\" -m \"" message "\""))
-       ;;(t-image (concat " -p \"C:\\Program Files\\emacs\\share\\icons\\hicolor\\128x128\\apps\\emacs.png\""))
-       (my-command (concat erc-burnt-toast-command "person@is.an.email.address" t-title t-message )))
-    (call-process-shell-command my-command)))
-
-(setq org-pomodoro-length 3)  ;; test duration of pomodoro
-
-(defun +org-pomodoro/notification(title message)
-  "Send a notification"
-  (when IS-MAC
-    (do-applescript
-     (format "display notification \"%s\" with title \"%s\" sound name \"Ping\"" message title)))
-  (if (eq system-type 'windows-nt)
-      (org-pomodoro-notify (title message)))
-  )
-
-
+  (call-process "toast64" nil nil nil
+                "--title" title
+                "--message" message
+                "--icon" "C:\Program Files\Emacs\x86_64\share\emacs\27.1\etc\images\icons\hicolor\128x128\apps\emacs.png"))

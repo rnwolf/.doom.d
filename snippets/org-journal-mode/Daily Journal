@@ -12,6 +12,11 @@ C-c > : Schedule task time  hjkl & SHIFT <> to navigate
 C-c . : Set active date & time stamp
 
 C-c g c : org-gtd-capture add item to inbox
+SPC X : org-capture templates
+C-j : Jump down heading in level
+C-k : Jump up heading in level
+]] : Jump down heading
+[[ : Jump up heading
 
 * Wellbeing
 ** TODO Exercise

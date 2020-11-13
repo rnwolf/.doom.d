@@ -636,21 +636,36 @@ it can be passed in POS."
 ;; Will need to get them working for org-agenda notifications.
 ;;
 
+;; This function suggested by Doom creator/maintainer - Does not work yet. Seems simpler than current function
 ;;(defun org-pomodoro-notify (title message)
 ;;  "Temporary replacement for function of the same name which uses
 ;;the buggy alert.el package.  TITLE is the title of the MESSAGE."
-;;  (let*
-;;      ((toast "toast64")
-;;       (t-title (concat " --title \"" title))
-;;       (t-message (concat "\" --message \"" message "\""))
-;;       (t-image (concat " --icon \"C:\\Program Files\\Emacs\\x86_64\\share\\emacs\\27.1\\etc\\images\\icons\\hicolor\\128x128\\apps\\emacs.png\""))
-;;       (my-command (concat toast t-title t-message t-image)))
-;;    (call-process-shell-command my-command)))
+;;  (call-process "toast64" nil nil nil
+;;                "--title" title
+;;                "--message" message
+;;                "--icon" "C:\Program Files\Emacs\x86_64\share\emacs\27.1\etc\images\icons\hicolor\128x128\apps\emacs.png"))
+;;
+
+(after! org-pomodoro
+
+  ;; Org-pomodoro
+(setq org-pomodoro-length 1) ;; 25
+(setq org-pomodoro-short-break-length 1) ;; 5
+(setq org-pomodoro-long-break-length 15)
+(setq org-pomodoro-play-sounds nil)
 
 (defun org-pomodoro-notify (title message)
   "Temporary replacement for function of the same name which uses
-the buggy alert.el package.  TITLE is the title of the MESSAGE."
-  (call-process "toast64" nil nil nil
-                "--title" title
-                "--message" message
-                "--icon" "C:\Program Files\Emacs\x86_64\share\emacs\27.1\etc\images\icons\hicolor\128x128\apps\emacs.png"))
+the buggy alert.el package.  TITLE is the title of the MESSAGE.
+Assumes you have installed toast64.exe from https://github.com/go-toast/toast"
+  (let*
+      ((toast "toast64")
+       (t-title (concat " --title \"" title))
+       (t-message (concat "\" --message \"" message "\""))
+       (t-image (concat " --icon \"C:\\Program Files\\Emacs\\x86_64\\share\\emacs\\27.1\\etc\\images\\icons\\hicolor\\128x128\\apps\\emacs.png\""))
+       (t-duration (concat " --duration \"medium\""))
+       (t-appid (concat " --app-id \"EMACS org-Pomodoro\""))
+       (t-audio (concat " --audio \"default\""))
+       (my-command (concat toast t-title t-message t-image t-audio t-duration t-appid)))
+    (call-process-shell-command my-command)))
+)

@@ -89,5 +89,6 @@
 (package! org-gtd)
 
 ;; These packages make it possible for org-pomodoro to play sound wav file for clicking clock.
-(package! sound-wav)
-(package! powershell)
+;; NOTE enabling these packages caused problems with org-pomodoro. Opens up second window of buffer!
+;;(package! sound-wav)
+;;(package! powershell)

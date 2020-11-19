@@ -609,12 +609,16 @@ it can be passed in POS."
       "s c"
       #'evil-ex-nohighlight)
 
+;; Update Load path with any packages installed in the C:\Users\rnwol\.doom.d\packages directory
+(let ((default-directory (expand-file-name "packages" doom-private-dir)))
+  (normal-top-level-add-subdirs-to-load-path))
+
+;; In the above packages load path
+;;(require 'org-alert)
+
 ;; erc-burnt-toast.el --- erc-match support for w32 notification center
 ;; https://github.com/mplscorwin/erc-burnt-toast/blob/master/erc-burnt-toast.el
 ;;(add-load-path "lisp")
-
-(let ((default-directory (expand-file-name "packages" doom-private-dir)))
-  (normal-top-level-add-subdirs-to-load-path))
 
 ;; Basic setup:
 ;;   (eval-after-load 'erc-match
@@ -626,31 +630,12 @@ it can be passed in POS."
 ;; ref https://www.gitmemory.com/issue/marcinkoziej/org-pomodoro/75/517809613
 
 ;; Org-pomodoro
-(setq org-pomodoro-length 1) ;; 25
-(setq org-pomodoro-short-break-length 1) ;; 5
-(setq org-pomodoro-long-break-length 15)
-(setq org-pomodoro-play-sounds 1)
-
-;;
-;; Can't get popup notofications working under windows. But audio will be good enough.
-;; Will need to get them working for org-agenda notifications.
-;;
-
-;; This function suggested by Doom creator/maintainer - Does not work yet. Seems simpler than current function
-;;(defun org-pomodoro-notify (title message)
-;;  "Temporary replacement for function of the same name which uses
-;;the buggy alert.el package.  TITLE is the title of the MESSAGE."
-;;  (call-process "toast64" nil nil nil
-;;                "--title" title
-;;                "--message" message
-;;                "--icon" "C:\Program Files\Emacs\x86_64\share\emacs\27.1\etc\images\icons\hicolor\128x128\apps\emacs.png"))
-;;
 
 (after! org-pomodoro
 
   ;; Org-pomodoro
-(setq org-pomodoro-length 1) ;; 25
-(setq org-pomodoro-short-break-length 1) ;; 5
+(setq org-pomodoro-length 25) ;; 25
+(setq org-pomodoro-short-break-length 5) ;; 5
 (setq org-pomodoro-long-break-length 15)
 (setq org-pomodoro-play-sounds nil)
 
@@ -669,3 +654,13 @@ Assumes you have installed toast64.exe from https://github.com/go-toast/toast"
        (my-command (concat toast t-title t-message t-image t-audio t-duration t-appid)))
     (call-process-shell-command my-command)))
 )
+
+
+;; In order to get Popup Windows notifications, of style "toaster" working
+;; We need to add the following to config.el
+;; Also makes use of the toast64.exe utility.
+;; because of #30 https://github.com/jwiegley/alert/issues/30
+(after! alert
+   (setq alert-default-style (quote toaster))
+   (setq alert-user-configuration (quote ((nil toaster nil))))
+   )

@@ -92,3 +92,22 @@
 ;; NOTE enabling these packages caused problems with org-pomodoro. Opens up second window of buffer!
 ;;(package! sound-wav)
 ;;(package! powershell)
+
+
+;; Replace the alert package withich is part of the default DOOM configuration
+;; See https://github.com/hlissner/doom-emacs/blob/develop/docs/getting_started.org#changing-a-recipe-for-a-included-package
+(package! alert)
+;;  Had to fork and modify the alert.el package in order to use a more recent notification utility app for MS-Windows
+;;  There is also another even more recent elisp based package which will be worth exploring.
+;;  See https://github.com/gkowzan/alert-toast
+(package! alert
+  :recipe (:host github :repo "rnwolf/alert"))
+;; Also need to add the following to config.el
+;; add the following to your .emacs file, because of #30 https://github.com/jwiegley/alert/issues/30
+;;(setq alert-default-style (quote toaster))
+;;(setq alert-user-configuration (quote ((nil toaster nil))))
+
+;; End of alert comments
+
+;; Adds notification support for org-agenda views.
+(package! org-wild-notifier)
